@@ -1,13 +1,10 @@
-#Импортируем модули
 from aiohttp import web
 import socket
 import threading
 import syslog
 
-#Определяем маршруты
 routes = web.RouteTableDef()
 
-#Сканнер
 def tcpConnect(ip, port_number, openPorts):
     connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -34,7 +31,6 @@ def scan_ports(host_ip, portMin, portMax, openPorts):
     for i in range(forScan):
         threads[i].join()
 
-#Штука которая принимает все запросы
 @routes.get('/scan/{ip}/{begin_port}/{end_port}')
 async def handler(request):
     try:
@@ -72,7 +68,6 @@ async def handler(request):
         syslog.syslog("Error: Common error")
         pass
 
-#Обработка ошибок
 @web.middleware
 async def error_middleware(request, handler):
     try:
@@ -85,11 +80,9 @@ async def error_middleware(request, handler):
         syslog.syslog('Code 404: Not Found')
     return web.json_response({'error': status})
 
-#Что-то типо самой главной части
 async def scanApp() -> web.Application:
     app = web.Application(middlewares=[error_middleware])
     app.add_routes(routes)
     return app
 
-#Запускаем приложение
 web.run_app(scanApp())
